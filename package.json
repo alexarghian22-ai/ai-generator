@@ -1,8 +1,9 @@
 {
   "name": "ai-video-generator",
   "version": "1.0.0",
-  "description": "Generator de videoclipuri scurte animate din idei text, folosind Claude AI si Shotstack",
+  "description": "Generator de videoclipuri scurte animate din idei text, folosind Google Gemini si Shotstack",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vercel dev"
   }
