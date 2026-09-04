@@ -48,7 +48,7 @@ Reguli:
 - Nu adăuga niciun comentariu în afara JSON-ului.`;
 
   try {
-    const model = 'gemini-2.5-flash';
+    const model = 'gemini-3.6-flash';
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
     const response = await fetch(endpoint, {
@@ -102,4 +102,3 @@ Reguli:
     return res.status(500).json({ error: 'Eroare internă la generarea scenariului.' });
   }
 }
-
