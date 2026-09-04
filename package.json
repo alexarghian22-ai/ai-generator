@@ -1,0 +1,9 @@
+{
+  "name": "ai-video-generator",
+  "version": "1.0.0",
+  "description": "Generator de videoclipuri scurte animate din idei text, folosind Claude AI si Shotstack",
+  "private": true,
+  "scripts": {
+    "dev": "vercel dev"
+  }
+}
