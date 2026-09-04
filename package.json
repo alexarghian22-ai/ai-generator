@@ -1,7 +1,7 @@
 {
   "name": "ai-video-generator",
   "version": "1.0.0",
-  "description": "Generator de videoclipuri scurte animate din idei text, folosind Google Gemini si Shotstack",
+  "description": "Generator de videoclipuri scurte animate din idei text, folosind Google Gemini si Bannerbear",
   "private": true,
   "type": "module",
   "scripts": {
