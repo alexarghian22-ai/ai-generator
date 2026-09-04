@@ -1,6 +1,7 @@
 // api/generate-script.js
-// Primește ideea utilizatorului și cere lui Claude să o transforme
+// Primește ideea utilizatorului și cere lui Gemini (Google) să o transforme
 // într-un scenariu structurat, cu mai multe scene, gata de trimis la Shotstack.
+// Foloseste nivelul gratuit al Gemini API (fara card necesar).
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -13,14 +14,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Lipsește textul ideii.' });
   }
 
-  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+  const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
-  if (!ANTHROPIC_API_KEY) {
-    return res.status(500).json({ error: 'Cheia Claude API nu este configurată pe server.' });
+  if (!GEMINI_API_KEY) {
+    return res.status(500).json({ error: 'Cheia Gemini API nu este configurată pe server.' });
   }
 
-  // Paleta de culori de fundal din care Claude poate alege, ca să păstrăm
-  // un aspect coerent și "video-friendly" (nu culori random).
   const systemPrompt = `Ești un regizor creativ care transformă o idee scurtă într-un scenariu
 pentru un video vertical scurt (stil reel/short), format din 3 până la 6 scene.
 
@@ -49,37 +48,47 @@ Reguli:
 - Nu adăuga niciun comentariu în afara JSON-ului.`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const model = 'gemini-2.5-flash';
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
+        'x-goog-api-key': GEMINI_API_KEY,
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-5',
-        max_tokens: 1024,
-        system: systemPrompt,
-        messages: [{ role: 'user', content: idea.trim() }],
+        system_instruction: {
+          parts: [{ text: systemPrompt }],
+        },
+        contents: [
+          {
+            role: 'user',
+            parts: [{ text: idea.trim() }],
+          },
+        ],
+        generationConfig: {
+          // Cerem direct raspuns JSON, ca sa nu mai fie nevoie sa curatam markdown
+          responseMimeType: 'application/json',
+          temperature: 0.9,
+        },
       }),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      console.error('Eroare Claude API:', data);
+      console.error('Eroare Gemini API:', data);
       return res.status(502).json({ error: 'Eroare la generarea scenariului.', details: data });
     }
 
-    const rawText = data.content?.[0]?.text?.trim() || '';
+    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
 
     let parsed;
     try {
-      // Curățăm eventuale backtick-uri de markdown, ca măsură de siguranță
-      const cleaned = rawText.replace(/^```json\s*|```$/g, '').trim();
-      parsed = JSON.parse(cleaned);
+      parsed = JSON.parse(rawText);
     } catch (parseErr) {
-      console.error('Răspuns Claude neparsabil:', rawText);
+      console.error('Răspuns Gemini neparsabil:', rawText);
       return res.status(502).json({ error: 'Scenariul generat nu a putut fi interpretat.' });
     }
 
@@ -93,3 +102,4 @@ Reguli:
     return res.status(500).json({ error: 'Eroare internă la generarea scenariului.' });
   }
 }
+
